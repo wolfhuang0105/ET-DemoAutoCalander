@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETalking Demo 總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0c0e14; --bg2:#111420; --bg3:#161926;
+  --border:#1e2235; --border2:#252a3a;
+  --text:#c8d0e8; --text2:#6a7490; --text3:#3a4058;
+  --accent:#4e8cff; --kids:#f4845f; --adult:#43c98a;
+  --mono:'DM Mono',monospace; --sans:'Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(78,140,255,.06),transparent 60%),
+             radial-gradient(ellipse 60% 40% at 80% 80%,rgba(67,201,138,.04),transparent 60%)}
+.wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:32px 20px 60px}
+
+/* Header */
+header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1e3a6e,#2a5298);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 4px 16px rgba(78,140,255,.3)}
+h1{font-size:18px;font-weight:700;color:#e8eeff;line-height:1.2}
+.subtitle{font-size:11px;color:var(--text2);margin-top:2px;font-family:var(--mono)}
+.sync-info{text-align:right;flex-shrink:0}
+.sync-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.5px}
+.sync-time{font-size:13px;color:var(--accent);font-family:var(--mono);font-weight:500;margin-top:2px}
+.sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--adult);margin-right:5px;vertical-align:middle;animation:pulse 2s infinite}
+.sync-dot.stale{background:var(--text3);animation:none}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* Controls */
+.controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0}
+.seg button{background:transparent;border:none;color:var(--text2);padding:6px 13px;cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:500;transition:all .15s;white-space:nowrap}
+.seg button.active{background:#1e2a4a;color:var(--accent);font-weight:700}
+#month-seg{display:none}
+#month-seg button.active{background:#2a2a40;color:#c8b8ff;font-weight:700}
+#staff-seg button[data-val="taipei"].active{background:#1a3a20;color:#52c987}
+#staff-seg button[data-val="other"].active{background:#2e1e2e;color:#c55a8a}
+.view-toggle{margin-left:auto}
+.refresh-btn{background:var(--bg2);border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:6px}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
+.refresh-btn.loading{opacity:.5;pointer-events:none}
+
+/* Person row */
+.person-row{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.person-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;white-space:nowrap}
+.person-filters{display:flex;flex-wrap:wrap;gap:6px}
+.pf-btn{background:transparent;border:1.5px solid var(--border2);color:var(--text2);border-radius:20px;padding:4px 12px;cursor:pointer;font-size:12px;font-family:var(--sans);transition:all .15s;white-space:nowrap}
+.pf-btn.local-btn{border-color:color-mix(in srgb,var(--pc) 55%,transparent);color:color-mix(in srgb,var(--pc) 85%,#8891a4);background:color-mix(in srgb,var(--pc) 8%,transparent)}
+.pf-btn:hover{border-color:var(--pc,#6a7490);color:var(--pc,#6a7490);background:color-mix(in srgb,var(--pc,#4e8cff) 10%,transparent)}
+.pf-btn.active{background:color-mix(in srgb,var(--pc,#4e8cff) 20%,transparent);border-color:var(--pc,#4e8cff);color:var(--pc,#4e8cff);font-weight:700}
+.pf-cnt{font-size:10px;font-family:var(--mono);opacity:.7;margin-left:2px}
+
+/* Scoreboard */
+.scoreboard-wrap{margin-bottom:24px}
+.scoreboard{display:grid;grid-template-columns:72px repeat(3,1fr);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-family:var(--mono)}
+.sb-hdr{background:var(--bg2);padding:8px;font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--text3);text-align:center;border-bottom:1px solid var(--border)}
+.sb-hdr.kids{color:var(--kids)}.sb-hdr.adult{color:var(--adult)}.sb-hdr.total{color:var(--accent)}
+.sb-sort{cursor:pointer;user-select:none;transition:opacity .15s}.sb-sort:hover{opacity:.7}
+.sb-name{background:var(--bg3);padding:8px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.sb-cell{background:var(--bg3);padding:8px;text-align:center;font-size:13px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.sb-cell.kids{color:var(--kids)}.sb-cell.adult{color:var(--adult)}.sb-cell.total{color:#e8eeff;font-weight:700}
+.sb-row{cursor:pointer;transition:filter .12s}.sb-row:hover{filter:brightness(1.3)}
+.sb-row-active{background:#1a2540!important}
+.scoreboard>*:nth-last-child(-n+4){border-bottom:none}
+
+/* By人 */
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:4px}
+.section-line{flex:1;height:1px;background:var(--border)}
+.section-date{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text2);white-space:nowrap}
+.day-tag{background:#1a3a5a;color:#6ab4ff;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.events{display:flex;flex-direction:column;gap:4px;margin-bottom:20px}
+.event-card{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid;border-radius:10px;padding:8px 12px;transition:background .12s,transform .1s}
+.event-card:hover{background:var(--bg3);transform:translateX(2px)}
+.ev-time{font-family:var(--mono);font-size:11px;color:#6a9cc0;white-space:nowrap;min-width:92px;flex-shrink:0}
+.ev-owner{font-size:10px;font-weight:700;border:1px solid;border-radius:5px;padding:1px 6px;white-space:nowrap;flex-shrink:0}
+.ev-cal{font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;flex-shrink:0}
+.ev-cal.Kids{background:#2e1a1a;color:var(--kids)}.ev-cal.Adult{background:#162e1e;color:var(--adult)}
+.ev-name{font-size:13px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* By日期 */
+.date-row{display:flex;flex-direction:column;gap:7px;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);margin-bottom:5px;transition:background .12s;scroll-margin:12px}
+.date-row:hover{background:var(--bg3)}
+.date-row-left{display:flex;align-items:center;gap:7px}
+.date-row-label{font-size:11.5px;font-weight:600;color:#5a7aaa;font-family:var(--mono)}
+.date-today-label{color:#a8d8ff!important;font-weight:700}
+.date-row-cnt{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--text3);background:var(--bg);border-radius:10px;padding:1px 8px;flex-shrink:0}
+.date-tag-today{background:#2a3a5a!important;color:#a8d8ff!important}
+.date-chips{display:flex;flex-wrap:wrap;gap:5px}
+.date-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;border:1px solid;border-radius:20px;padding:3px 9px;white-space:nowrap;transition:filter .12s;cursor:default}
+.date-chip:hover{filter:brightness(1.3)}
+.chip-k{font-size:9px;font-weight:700;background:#2e1a1a;color:var(--kids);border-radius:4px;padding:0 4px}
+.chip-a{font-size:9px;font-weight:700;background:#162e1e;color:var(--adult);border-radius:4px;padding:0 4px}
+
+/* By客戶 */
+.search-wrap{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.search-inp{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:7px 12px;font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.search-inp:focus{border-color:#4e6aaa}
+.search-inp::placeholder{color:var(--text3)}
+.search-cnt{font-size:11px;color:var(--text2);font-family:var(--mono);white-space:nowrap}
+.ct-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ct-table{width:100%;border-collapse:collapse}
+.ct-table th{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-family:var(--mono)}
+.ct-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.ct-table tr:last-child td{border-bottom:none}
+.ct-table tr:hover td{background:var(--bg3)}
+.ct-name{color:var(--text);font-size:13px}
+.ct-date{font-family:var(--mono);font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:2px}
+.ct-datechip{background:var(--bg3);color:var(--text2);font-size:9px;border-radius:4px;padding:1px 5px;font-family:var(--mono);display:inline-block}
+
+/* Empty / Loading */
+.empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty-icon{font-size:32px;opacity:.4}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-in{opacity:0;transform:translateY(8px);animation:fadeUp .3s ease forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.view-toggle{margin-left:0}.event-card{flex-wrap:wrap}.ev-time{min-width:unset}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📅</div>
+      <div>
+        <h1>ETalking Demo 總覽</h1>
+        <div class="subtitle" id="subtitle">Kids &amp; Adult · 載入中…</div>
+      </div>
+    </div>
+    <div class="sync-info">
+      <div class="sync-label">GAS 最後同步</div>
+      <div class="sync-time" id="sync-time">—</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="month-seg"></div>
+    <div class="seg" id="cal-seg">
+      <button class="active" data-val="all">全部</button>
+      <button data-val="Kids">Kids</button>
+      <button data-val="Adult">Adult</button>
+    </div>
+    <div class="seg" id="staff-seg">
+      <button class="active" data-val="all">🌐</button>
+      <button data-val="taipei">台北</button>
+      <button data-val="other">其他</button>
+    </div>
+    <div class="seg view-toggle" id="view-seg">
+      <button class="active" data-val="person">👤 By人</button>
+      <button data-val="date">📆 By日期</button>
+      <button data-val="customer">📋 By客戶</button>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="load()">
+      <span id="refresh-icon">↻</span> 重新整理
+    </button>
+  </div>
+
+  <div class="person-row">
+    <span class="person-label">業務</span>
+    <div class="person-filters" id="person-seg"></div>
+  </div>
+
+  <div class="scoreboard-wrap" id="scoreboard-wrap"></div>
+  <div id="content"><div class="empty"><div class="spinner"></div><div>載入中…</div></div></div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  設定
+// ══════════════════════════════════════════════════════
+const GAS_URL      = 'https://script.google.com/macros/s/AKfycbw3gE5ibBUPdzSmaXnyQsUrPmE8Lf3JEZ5GxYkRCe37FxZVh9jqLPpqsF917mHcFi3cXQ/exec';
+const TAIPEI_SHEET = 'https://docs.google.com/spreadsheets/d/13SrI50MGBAJHcRqFXa2TT5EDki3EGd0YL5wAGKXzPuw/export?format=csv&gid=1534602765';
+
+const NAME_MAP_ACC = {
+  'joy.hung'    :'Joy',   'lily.yang'   :'Lily',  'luke.yang'   :'Luke',
+  'wolf.huang'  :'Wolf',  'elsie.lin'   :'Elsie', 'wynn.wu'     :'Wynn',
+  'rita.hou'    :'Rita',  'andy.shen'   :'Andy',  'elijah.chen' :'Elijah',
+  'shawna.huang':'Shawna','alan.yang'   :'Alan',  'jim.chen'    :'Jim',
+  'jordan.lee'  :'Jordan','joyce.wei'   :'Joyce', 'connie.you'  :'Connie',
+  'tess.peng'   :'Tess',  'hazel.lin'   :'Hazel',
+};
+
+const TAIPEI_HARDCODE = new Set([
+  'Joy','Lily','Luke','Wolf','Elsie','Wynn','Rita','Andy',
+  'Elijah','Shawna','Alan','Jim',
+]);
+
+const COLOR_PRESET = {
+  'Joy':'#e05b5b','Elijah':'#4a9eda','Elsie':'#5db87a','Wynn':'#e8a030',
+  'Lily':'#b06ecf','Shawna':'#48b8b0','Luke':'#e06b30','Wolf':'#c8a020',
+  'Rita':'#5a9ed0','Andy':'#8a7ac0','Alan':'#d06898','Jim':'#60a880',
+  'Jordan':'#6b7585','Joyce':'#6b7585','Connie':'#6b7585',
+  'Tess':'#6b7585','Hazel':'#6b7585',
+};
+
+// ── State ─────────────────────────────────────────────
+let allEvents   = [];
+let taipeiSet   = new Set(TAIPEI_HARDCODE);
+const _cc = {};
+let state = {
+  cal:'all', staff:'all', person:'all',
+  view:'person', monthOffset:0,
+  sbSort:{col:'total',dir:-1}, search:'',
+};
+
+// ── Color & local ──────────────────────────────────────
+function getColor(o) {
+  if (COLOR_PRESET[o]) return COLOR_PRESET[o];
+  if (_cc[o]) return _cc[o];
+  let h=0; for(let i=0;i<o.length;i++) h=o.charCodeAt(i)+((h<<5)-h);
+  return (_cc[o]=`hsl(${Math.abs(h)%360},60%,62%)`);
+}
+const isLocal = o => taipeiSet.has(o);
+
+// ── Month helpers ─────────────────────────────────────
+function getMonthInfo(offset=0) {
+  const now  = new Date();
+  const year = now.getFullYear() + (now.getMonth()+offset>11?1:0);
+  const month= (now.getMonth()+offset)%12;
+  return { year, month, label:`${month+1}月`,
+    start: new Date(year,month,1),
+    end  : new Date(year,month+1,0,23,59,59) };
+}
+function needsNextMonth() {
+  const today=new Date(), p14=new Date(today); p14.setDate(today.getDate()+14);
+  return p14.getMonth()!==today.getMonth()||p14.getFullYear()!==today.getFullYear();
+}
+
+// ── Taipei staff ───────────────────────────────────────
+async function fetchTaipeiStaff() {
+  try {
+    const res=await fetch(TAIPEI_SHEET+'&t='+Date.now());
+    const text=await res.text();
+    const cells=text.split(/[\r\n,\t]+/).map(s=>s.trim()).filter(Boolean);
+    const accK=new Set(Object.keys(NAME_MAP_ACC)), dispV=new Set(Object.values(NAME_MAP_ACC));
+    const newSet=new Set();
+    for(const cell of cells){
+      const lower=cell.toLowerCase();
+      if(accK.has(lower)){newSet.add(NAME_MAP_ACC[lower]);continue}
+      if(dispV.has(cell)){newSet.add(cell);continue}
+      if(/^[a-z]+\.[a-z]+$/.test(lower)){
+        const m=NAME_MAP_ACC[lower];
+        newSet.add(m||lower.split('.').map(w=>w[0].toUpperCase()+w.slice(1)).join(''));
+      }
+    }
+    if(newSet.size>0) taipeiSet=newSet;
+  } catch(e){}
+}
+
+// ── GAS fetch ─────────────────────────────────────────
+async function load() {
+  const btn=document.getElementById('refresh-btn');
+  btn.classList.add('loading');
+  document.getElementById('refresh-icon').textContent='…';
+  try {
+    const res=await fetch(GAS_URL+'?t='+Date.now());
+    const json=await res.json();
+    // 更新時間
+    if(json.updated){
+      const d=new Date(json.updated),now=new Date();
+      const age=Math.round((now-d)/60000),stale=age>60;
+      const dot=stale?'<span class="sync-dot stale"></span>':'<span class="sync-dot"></span>';
+      document.getElementById('sync-time').innerHTML=dot
+        +d.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})
+        +(age>0?` <span style="color:var(--text3);font-size:10px">(${age}分前)</span>`:'');
+    }
+    const today=new Date(); today.setHours(0,0,0,0);
+    allEvents=(json.events||[]).map(ev=>({
+      ...ev,
+      _start:parseDT(ev.dtstart), _end:parseDT(ev.dtend),
+      _owner:ownerShort(ev.owner_name), _cal:ev.cal,
+    })).filter(ev=>ev._start).sort((a,b)=>a._start-b._start);
+    rebuildAll();
+  } catch(e) {
+    document.getElementById('content').innerHTML=
+      `<div class="empty"><div class="empty-icon">⚠️</div><div>讀取失敗：${e.message}</div></div>`;
+  } finally {
+    btn.classList.remove('loading');
+    document.getElementById('refresh-icon').textContent='↻';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────
+function parseDT(str) {
+  const m=(str||'').match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+  if(!m)return null;
+  const[,Y,Mo,D,h,min]=m;
+  return new Date(`${Y}-${Mo}-${D}T${h}:${min}:00+08:00`);
+}
+function ownerShort(name) {
+  const acc=(name||'').replace(/^.*[\\\/]/,'').toLowerCase();
+  return NAME_MAP_ACC[acc]||acc.split('.').map(w=>w?w[0].toUpperCase()+w.slice(1):'').join('')||'?';
+}
+const fmt =d=>d?d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
+const dkey=d=>d.toLocaleDateString('sv-SE');
+
+function fmtDate(key) {
+  const d=new Date(key+'T00:00:00+08:00'),today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.round((d-today)/86400000);
+  const wd=d.toLocaleDateString('zh-TW',{weekday:'short'});
+  const tag=diff===0?'今天':diff===1?'明天':diff===2?'後天':'';
+  const ds=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;
+  return tag?`<span class="day-tag">${tag}</span> ${ds}`:ds;
+}
+function shortDate(d) {
+  const today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.round((new Date(dkey(d)+'T00:00:00+08:00')-today)/86400000);
+  const wd=d.toLocaleDateString('zh-TW',{weekday:'short'});
+  if(diff===0)return`<span class="day-tag">今天</span>`;
+  if(diff===1)return`<span class="day-tag">明天</span>`;
+  return`<span class="ct-datechip">${d.getMonth()+1}/${d.getDate()}（${wd}）</span>`;
+}
+function ownerBadge(o) {
+  const local=isLocal(o),c=local?getColor(o):'#4a5268';
+  const style=local?`color:${c};border-color:${c}66;background:${c}22`
+                   :`color:#4a5268;border-color:#2e3350;background:transparent`;
+  return`<span class="ev-owner" style="${style}">${o}</span>`;
+}
+
+// ── Filter ────────────────────────────────────────────
+function filtered(search='') {
+  const {year,month}=getMonthInfo(state.monthOffset);
+  return allEvents.filter(ev=>{
+    if(ev._start.getFullYear()!==year||ev._start.getMonth()!==month) return false;
+    if(state.cal!=='all'&&ev._cal!==state.cal) return false;
+    if(state.staff==='taipei'&&!isLocal(ev._owner)) return false;
+    if(state.staff==='other' && isLocal(ev._owner)) return false;
+    if(state.person!=='all'&&ev._owner!==state.person) return false;
+    if(search&&!ev.summary.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+}
+
+function getTallyMap() {
+  const {year,month}=getMonthInfo(state.monthOffset);
+  const t={};
+  for(const ev of allEvents){
+    if(ev._start.getFullYear()!==year||ev._start.getMonth()!==month) continue;
+    if(state.cal!=='all'&&ev._cal!==state.cal) continue;
+    t[ev._owner]=(t[ev._owner]||0)+1;
+  }
+  return t;
+}
+
+function getTallyKAT() {
+  const {year,month}=getMonthInfo(state.monthOffset);
+  const kids={},adult={},total={};
+  for(const ev of allEvents){
+    if(ev._start.getFullYear()!==year||ev._start.getMonth()!==month) continue;
+    const o=ev._owner;
+    if(ev._cal==='Kids')  kids[o]=(kids[o]||0)+1;
+    if(ev._cal==='Adult') adult[o]=(adult[o]||0)+1;
+    total[o]=(total[o]||0)+1;
+  }
+  return {kids,adult,total};
+}
+
+// ── Sort ──────────────────────────────────────────────
+function sortOwners(owners,cntMap) {
+  const local =owners.filter(o=> isLocal(o)).sort((a,b)=>(cntMap[b]||0)-(cntMap[a]||0));
+  const remote=owners.filter(o=>!isLocal(o)).sort((a,b)=>(cntMap[b]||0)-(cntMap[a]||0));
+  return [...local,...remote];
+}
+
+// ── Rebuild all ───────────────────────────────────────
+function rebuildAll() {
+  buildMonthTabs();
+  // subtitle
+  const {label}=getMonthInfo(state.monthOffset);
+  document.getElementById('subtitle').textContent=`Kids & Adult · ${label}`;
+  const allOwners=[...new Set(allEvents.map(e=>e._owner))];
+  const vis=allOwners.filter(o=>
+    state.staff==='taipei'?isLocal(o):state.staff==='other'?!isLocal(o):true
+  );
+  buildPersonBtns(sortOwners(vis,getTallyMap()));
+  buildScoreboard(vis);
+  render();
+}
+
+// ── Month tabs ────────────────────────────────────────
+function buildMonthTabs() {
+  const seg=document.getElementById('month-seg');
+  const showNext=needsNextMonth();
+  seg.style.display=showNext?'':'none';
+  if(!showNext){state.monthOffset=0;return;}
+
+  function monthCnt(offset){
+    const{year,month}=getMonthInfo(offset);
+    return allEvents.filter(ev=>{
+      if(ev._start.getFullYear()!==year||ev._start.getMonth()!==month)return false;
+      if(state.cal!=='all'&&ev._cal!==state.cal)return false;
+      if(state.staff==='taipei'&&!isLocal(ev._owner))return false;
+      if(state.staff==='other' && isLocal(ev._owner))return false;
+      return true;
+    }).length;
+  }
+
+  const tabs=[{o:0,info:getMonthInfo(0)},{o:1,info:getMonthInfo(1)}];
+  seg.innerHTML=tabs.map(({o,info})=>`
+    <button ${state.monthOffset===o?'class="active"':''} data-offset="${o}">
+      ${info.label}<span style="font-size:10px;opacity:.6;margin-left:3px">${monthCnt(o)}</span>
+    </button>`).join('');
+  seg.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      state.monthOffset=+b.dataset.offset;
+      state.person='all';
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      rebuildAll();
+    };
+  });
+}
+
+// ── Person buttons ────────────────────────────────────
+function buildPersonBtns(sorted) {
+  const seg=document.getElementById('person-seg');
+  const cnt={};
+  for(const ev of allEvents){
+    const{year,month}=getMonthInfo(state.monthOffset);
+    if(ev._start.getFullYear()!==year||ev._start.getMonth()!==month)continue;
+    if(state.cal!=='all'&&ev._cal!==state.cal)continue;
+    if(state.staff==='taipei'&&!isLocal(ev._owner))continue;
+    if(state.staff==='other' && isLocal(ev._owner))continue;
+    cnt[ev._owner]=(cnt[ev._owner]||0)+1;
+  }
+  const totalCnt=Object.values(cnt).reduce((a,b)=>a+b,0);
+  seg.innerHTML=['all',...sorted].map(o=>{
+    const isAll=o==='all';
+    const local=isAll||isLocal(o);
+    const c=isAll?'#6b7585':(local?getColor(o):'#3a4058');
+    const count=isAll?totalCnt:(cnt[o]||0);
+    const lc=(!isAll&&local)?'local-btn':'';
+    const dim=(!local&&!isAll)?'opacity:.4;':'';
+    const active=state.person===o?'active':'';
+    return`<button class="pf-btn ${active} ${lc}" data-val="${o}" style="--pc:${c};${dim}">
+             ${isAll?'全部':o}<span class="pf-cnt">${count}</span>
+           </button>`;
+  }).join('');
+  seg.querySelectorAll('.pf-btn').forEach(b=>{
+    b.onclick=()=>{
+      state.person=b.dataset.val;
+      seg.querySelectorAll('.pf-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      render();
+    };
+  });
+}
+
+// ── Scoreboard ────────────────────────────────────────
+function buildScoreboard(vis) {
+  const wrap=document.getElementById('scoreboard-wrap');
+  if(!vis.length){wrap.innerHTML='';return;}
+  const kat=getTallyKAT();
+  const {col,dir}=state.sbSort;
+  const rows=vis.map(o=>({
+    o,kids:(kat.kids[o]||0),adult:(kat.adult[o]||0),total:(kat.total[o]||0)
+  })).sort((a,b)=>{
+    const la=isLocal(a.o)?0:1,lb=isLocal(b.o)?0:1;
+    if(la!==lb)return la-lb;
+    return dir===-1?b[col]-a[col]:a[col]-b[col];
+  });
+  const arrow=c=>state.sbSort.col===c?(dir===-1?' ↓':' ↑'):' <span style="opacity:.2">⇅</span>';
+  wrap.innerHTML=`
+    <div class="scoreboard">
+      <div class="sb-hdr" style="cursor:default"></div>
+      <div class="sb-hdr kids sb-sort" data-col="kids">Kids${arrow('kids')}</div>
+      <div class="sb-hdr adult sb-sort" data-col="adult">Adult${arrow('adult')}</div>
+      <div class="sb-hdr total sb-sort" data-col="total">Total${arrow('total')}</div>
+      ${rows.map(({o,kids,adult,total})=>{
+        const local=isLocal(o),c=local?getColor(o):'#4a5268';
+        const dim=local?'':'opacity:.4;';
+        const tag=local?'':' <span style="font-size:9px;opacity:.35">外</span>';
+        const active=state.person===o?'sb-row-active':'';
+        return`
+          <div class="sb-name sb-row ${active}" data-owner="${o}" style="color:${c};${dim}">${o}${tag}</div>
+          <div class="sb-cell kids sb-row ${active}" data-owner="${o}" style="${dim}">${kids}</div>
+          <div class="sb-cell adult sb-row ${active}" data-owner="${o}" style="${dim}">${adult}</div>
+          <div class="sb-cell total sb-row ${active}" data-owner="${o}" style="${dim}">${total}</div>`;
+      }).join('')}
+    </div>`;
+  wrap.querySelectorAll('.sb-sort').forEach(h=>{
+    h.onclick=()=>{
+      const c=h.dataset.col;
+      state.sbSort=state.sbSort.col===c?{col:c,dir:state.sbSort.dir*-1}:{col:c,dir:-1};
+      buildScoreboard(vis);
+    };
+  });
+  wrap.querySelectorAll('.sb-row').forEach(row=>{
+    row.onclick=()=>{
+      const o=row.dataset.owner;
+      state.person=state.person===o?'all':o;
+      document.querySelectorAll('#person-seg .pf-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===state.person));
+      buildScoreboard(vis);
+      render();
+    };
+  });
+}
+
+// ── Render ────────────────────────────────────────────
+function render() {
+  const evs=filtered(state.search);
+  const el=document.getElementById('content');
+
+  if(state.view==='person'){
+    if(!evs.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div>此條件無排程</div></div>`;return;}
+    const byDate={};
+    for(const ev of evs){const k=dkey(ev._start);if(!byDate[k])byDate[k]=[];byDate[k].push(ev);}
+    el.innerHTML=Object.keys(byDate).sort().map((key,i)=>`
+      <div class="fade-in" style="animation-delay:${i*.04}s">
+        <div class="section-header"><div class="section-line"></div>
+          <div class="section-date">${fmtDate(key)}</div>
+          <div class="section-line"></div></div>
+        <div class="events">
+          ${byDate[key].map(ev=>{
+            const local=isLocal(ev._owner);
+            const c=local?getColor(ev._owner):'#2e3858';
+            const dim=local?'':'opacity:.5;';
+            return`<div class="event-card" style="border-left-color:${c};${dim}">
+              <span class="ev-time">${fmt(ev._start)}${ev._end?'–'+fmt(ev._end):''}</span>
+              ${state.person==='all'?ownerBadge(ev._owner):''}
+              <span class="ev-cal ${ev._cal}">${ev._cal}</span>
+              <span class="ev-name">${ev.summary}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+
+  } else if(state.view==='date'){
+    el.innerHTML=renderByDate(evs);
+    setTimeout(()=>scrollDateView(evs), 80);
+
+  } else {
+    // By客戶
+    const shown=state.search?evs.filter(ev=>ev.summary.toLowerCase().includes(state.search.toLowerCase())):evs;
+    el.innerHTML=`
+      <div class="search-wrap">
+        <input id="search-inp" class="search-inp" type="text"
+          placeholder="🔍 搜尋客戶名稱…" value="${(state.search||'').replace(/"/g,'&quot;')}">
+        <span class="search-cnt">${shown.length} 筆</span>
+      </div>
+      ${!shown.length
+        ?'<div class="empty"><div class="empty-icon">📭</div><div>無符合結果</div></div>'
+        :`<div class="ct-wrap fade-in">
+            <table class="ct-table">
+              <thead><tr><th>客戶</th><th>日期／時間</th><th>業務</th><th>類別</th></tr></thead>
+              <tbody id="ct-tbody">${shown.map(ev=>{
+                const dim=isLocal(ev._owner)?'':'opacity:.5;';
+                return`<tr style="${dim}">
+                  <td class="ct-name">${ev.summary}</td>
+                  <td><div class="ct-date">${shortDate(ev._start)}<span>${fmt(ev._start)}${ev._end?'–'+fmt(ev._end):''}</span></div></td>
+                  <td>${ownerBadge(ev._owner)}</td>
+                  <td><span class="ev-cal ${ev._cal}">${ev._cal}</span></td>
+                </tr>`;
+              }).join('')}</tbody>
+            </table>
+          </div>`
+      }`;
+    const inp=document.getElementById('search-inp');
+    if(inp) inp.addEventListener('input',e=>{
+      state.search=e.target.value;
+      const all=filtered(), s=state.search;
+      const shown=s?all.filter(ev=>ev.summary.toLowerCase().includes(s.toLowerCase())):all;
+      const cnt=el.querySelector('.search-cnt'); if(cnt)cnt.textContent=shown.length+' 筆';
+      const tbody=el.querySelector('#ct-tbody');
+      if(tbody)tbody.innerHTML=shown.map(ev=>{
+        const dim=isLocal(ev._owner)?'':'opacity:.5;';
+        return`<tr style="${dim}">
+          <td class="ct-name">${ev.summary}</td>
+          <td><div class="ct-date">${shortDate(ev._start)}<span>${fmt(ev._start)}${ev._end?'–'+fmt(ev._end):''}</span></div></td>
+          <td>${ownerBadge(ev._owner)}</td>
+          <td><span class="ev-cal ${ev._cal}">${ev._cal}</span></td>
+        </tr>`;
+      }).join('');
+      const wrap=el.querySelector('.ct-wrap');
+      if(!shown.length&&wrap)wrap.style.display='none';
+      else if(wrap)wrap.style.display='';
+    });
+  }
+}
+
+// ── By日期 render ─────────────────────────────────────
+function renderByDate(evs) {
+  if(!evs.length) return '<div class="empty"><div class="empty-icon">📭</div><div>此條件無排程</div></div>';
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayKey=dkey(today);
+
+  const byDate={};
+  for(const ev of evs){
+    const k=dkey(ev._start);
+    if(!byDate[k])byDate[k]={};
+    const o=ev._owner;
+    if(!byDate[k][o])byDate[k][o]={kids:0,adult:0};
+    if(ev._cal==='Kids')byDate[k][o].kids++;
+    else byDate[k][o].adult++;
+  }
+
+  return Object.keys(byDate).sort().map(key=>{
+    const d=new Date(key+'T00:00:00+08:00');
+    const diff=Math.round((new Date(key+'T00:00:00+08:00')-today)/86400000);
+    const wd=d.toLocaleDateString('zh-TW',{weekday:'short'});
+    const isPast=diff<0, isToday=key===todayKey;
+
+    let tagHtml='';
+    if(isToday) tagHtml=`<span class="day-tag date-tag-today">今天</span>`;
+    else if(diff===1) tagHtml=`<span class="day-tag">明天</span>`;
+    else if(diff===2) tagHtml=`<span class="day-tag">後天</span>`;
+
+    const ownerMap=byDate[key];
+    const owners=Object.keys(ownerMap).sort((a,b)=>{
+      const la=isLocal(a)?0:1,lb=isLocal(b)?0:1;
+      if(la!==lb)return la-lb;
+      return(ownerMap[b].kids+ownerMap[b].adult)-(ownerMap[a].kids+ownerMap[a].adult);
+    });
+
+    const chips=owners.map(o=>{
+      const local=isLocal(o),c=local?getColor(o):'#4a5268';
+      const d_=ownerMap[o];
+      const baseDim=isPast?'opacity:.35;':(!local?'opacity:.45;':'');
+      let detail='';
+      if(d_.kids&&d_.adult) detail=`<span class="chip-k">K${d_.kids}</span><span class="chip-a">A${d_.adult}</span>`;
+      else if(d_.kids)      detail=`<span class="chip-k">K${d_.kids}</span>`;
+      else                  detail=`<span class="chip-a">A${d_.adult}</span>`;
+      return`<span class="date-chip" style="color:${c};border-color:${c}${local?'55':'22'};background:${c}${local?'18':'0a'};${baseDim}">
+               ${o} ${detail}
+             </span>`;
+    }).join('');
+
+    const rowStyle=isPast?'opacity:.5;':isToday?'background:#1a2035;border-color:#2a3050;':'';
+    const totalCnt=Object.values(ownerMap).reduce((s,d)=>s+d.kids+d.adult,0);
+
+    return`<div class="date-row fade-in" data-date="${key}" style="${rowStyle}">
+      <div class="date-row-left">
+        ${tagHtml}
+        <span class="date-row-label ${isToday?'date-today-label':''}">${d.getMonth()+1}/${d.getDate()}（${wd}）</span>
+        <span class="date-row-cnt">${totalCnt}</span>
+      </div>
+      <div class="date-chips">${chips}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 自動聚焦日期 ──────────────────────────────────────
+function scrollDateView(evs) {
+  const el=document.getElementById('content'); if(!el) return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayKey=dkey(today);
+  let targetKey=null;
+
+  if(state.person!=='all'){
+    const upcoming=evs.filter(ev=>ev._owner===state.person&&ev._start>=today)
+                      .sort((a,b)=>a._start-b._start);
+    if(upcoming.length) targetKey=dkey(upcoming[0]._start);
+    else {
+      const past=evs.filter(ev=>ev._owner===state.person).sort((a,b)=>b._start-a._start);
+      if(past.length) targetKey=dkey(past[0]._start);
+    }
+  } else {
+    const hasToday=el.querySelector(`.date-row[data-date="${todayKey}"]`);
+    if(hasToday) targetKey=todayKey;
+    else {
+      const upcoming=evs.filter(ev=>ev._start>=today).sort((a,b)=>a._start-b._start);
+      if(upcoming.length) targetKey=dkey(upcoming[0]._start);
+    }
+  }
+
+  if(!targetKey) return;
+  const target=el.querySelector(`.date-row[data-date="${targetKey}"]`);
+  if(target) target.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ── Controls ──────────────────────────────────────────
+document.getElementById('cal-seg').addEventListener('click',e=>{
+  const btn=e.target.closest('button');if(!btn)return;
+  document.querySelectorAll('#cal-seg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); state.cal=btn.dataset.val; state.person='all';
+  if(state.cal==='Kids') state.sbSort={col:'kids',dir:-1};
+  else if(state.cal==='Adult') state.sbSort={col:'adult',dir:-1};
+  else state.sbSort={col:'total',dir:-1};
+  rebuildAll();
+});
+document.getElementById('staff-seg').addEventListener('click',e=>{
+  const btn=e.target.closest('button');if(!btn)return;
+  document.querySelectorAll('#staff-seg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); state.staff=btn.dataset.val; state.person='all';
+  state.sbSort={col:'total',dir:-1};
+  rebuildAll();
+});
+document.getElementById('view-seg').addEventListener('click',e=>{
+  const btn=e.target.closest('button');if(!btn)return;
+  document.querySelectorAll('#view-seg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); state.view=btn.dataset.val; state.search='';
+  render();
+});
+
+// ── Init ──────────────────────────────────────────────
+(async()=>{ await fetchTaipeiStaff(); await load(); })();
+</script>
+</body>
+</html>
